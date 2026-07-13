@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Italiano">
+<title>Italiano · Flashcards</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f7; min-height: 100vh; }
+
+  .app { max-width: 420px; margin: 0 auto; padding: 0 0 40px; }
+
+  /* Header */
+  .header { background: #fff; padding: 16px 20px 12px; border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 10; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .app-title { font-size: 22px; font-weight: 700; color: #111; letter-spacing: -0.5px; }
+  .app-subtitle { font-size: 12px; color: #999; margin-top: 2px; }
+  .card-count-badge { background: #EEEDFE; color: #534AB7; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 6px; }
+  .tab { flex: 1; padding: 8px 0; font-size: 13px; font-weight: 500; border-radius: 8px; border: 1px solid #e8e8e8; background: #fff; color: #888; cursor: pointer; transition: all 0.15s; text-align: center; }
+  .tab.active { background: #EEEDFE; border-color: #AFA9EC; color: #534AB7; }
+
+  /* Progress bar */
+  .progress-wrap { padding: 14px 20px 0; }
+  .progress-meta { display: flex; justify-content: space-between; font-size: 12px; color: #999; margin-bottom: 6px; }
+  .progress-bar { height: 4px; background: #e8e8e8; border-radius: 2px; }
+  .progress-fill { height: 100%; background: #7F77DD; border-radius: 2px; transition: width 0.35s ease; }
+
+  /* Card area */
+  .card-area { padding: 16px 20px; }
+
+  .flip-card { width: 100%; min-height: 230px; cursor: pointer; perspective: 1000px; margin-bottom: 16px; }
+  .flip-inner { width: 100%; min-height: 230px; position: relative; transform-style: preserve-3d; transition: transform 0.42s cubic-bezier(0.4,0,0.2,1); }
+  .flip-inner.flipped { transform: rotateY(180deg); }
+  .flip-face { position: absolute; width: 100%; min-height: 230px; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 18px; border: 1px solid #e8e8e8; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px 24px; text-align: center; }
+  .flip-front { background: #fff; }
+  .flip-back { background: #F8F7FF; border-color: #D0CCFA; transform: rotateY(180deg); }
+
+  .face-lang { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #bbb; margin-bottom: 10px; }
+  .face-word { font-size: 26px; font-weight: 700; color: #111; line-height: 1.2; margin-bottom: 10px; letter-spacing: -0.3px; }
+  .face-tag { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; margin-bottom: 6px; }
+  .face-hint { font-size: 12px; color: #ccc; margin-top: 14px; }
+  .face-example { font-size: 13px; color: #777; font-style: italic; line-height: 1.5; margin-top: 10px; max-width: 260px; }
+
+  /* Controls */
+  .controls { display: flex; gap: 10px; }
+  .ctrl-btn { flex: 1; padding: 13px 0; font-size: 14px; font-weight: 500; border-radius: 12px; border: 1px solid #e0e0e0; background: #fff; color: #333; cursor: pointer; transition: all 0.12s; }
+  .ctrl-btn:active { transform: scale(0.97); background: #f5f5f7; }
+
+  /* Add view */
+  .add-view { padding: 16px 20px; }
+  .section-title { font-size: 15px; font-weight: 600; color: #111; margin-bottom: 14px; }
+  .field-label { font-size: 12px; color: #888; margin-bottom: 5px; margin-top: 14px; display: block; }
+  .field-input { width: 100%; padding: 11px 14px; font-size: 15px; border-radius: 10px; border: 1px solid #e0e0e0; background: #fff; color: #111; outline: none; transition: border-color 0.15s; }
+  .field-input:focus { border-color: #AFA9EC; }
+  .field-textarea { width: 100%; padding: 11px 14px; font-size: 14px; border-radius: 10px; border: 1px solid #e0e0e0; background: #fff; color: #111; outline: none; resize: vertical; font-family: inherit; transition: border-color 0.15s; }
+  .field-textarea:focus { border-color: #AFA9EC; }
+  .add-btn { width: 100%; margin-top: 16px; padding: 14px; font-size: 15px; font-weight: 600; border-radius: 12px; border: none; background: #7F77DD; color: #fff; cursor: pointer; transition: opacity 0.15s; }
+  .add-btn:active { opacity: 0.85; }
+  .divider { border: none; border-top: 1px solid #eee; margin: 22px 0; }
+  .import-hint { font-size: 12px; color: #999; margin-bottom: 8px; }
+
+  /* List view */
+  .list-view { padding: 12px 20px; }
+  .list-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 12px; border: 1px solid #e8e8e8; background: #fff; margin-bottom: 8px; cursor: pointer; transition: background 0.1s; }
+  .list-item.current { border-color: #AFA9EC; background: #F8F7FF; }
+  .list-item:active { background: #f5f5f7; }
+  .list-it { font-size: 14px; font-weight: 500; color: #111; }
+  .list-en { font-size: 12px; color: #888; margin-top: 2px; }
+  .list-tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+  .del-btn { background: none; border: none; color: #ddd; font-size: 20px; cursor: pointer; padding: 0 2px; flex-shrink: 0; line-height: 1; }
+  .del-btn:active { color: #ff3b30; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: #1D9E75; color: #fff; padding: 10px 22px; border-radius: 22px; font-size: 13px; font-weight: 500; z-index: 999; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  .empty { text-align: center; padding: 48px 20px; color: #bbb; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="app-title">🇮🇹 Italiano</div>
+        <div class="app-subtitle">B2 · Vita quotidiana</div>
+      </div>
+      <span class="card-count-badge" id="badgeCount">20 cards</span>
+    </div>
+    <div class="tabs">
+      <button class="tab active" id="tab-study" onclick="switchView('study')">Study</button>
+      <button class="tab" id="tab-add" onclick="switchView('add')">+ Add</button>
+      <button class="tab" id="tab-list" onclick="switchView('list')">List</button>
+    </div>
+  </div>
+
+  <!-- STUDY VIEW -->
+  <div id="view-study">
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span id="cardCounter">1 / 20</span>
+        <span id="cardPct">5%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:5%"></div></div>
+    </div>
+    <div class="card-area">
+      <div class="flip-card" id="flipCard" onclick="flipCard()">
+        <div class="flip-inner" id="flipInner">
+          <div class="flip-face flip-front">
+            <div class="face-lang">Italiano</div>
+            <div class="face-word" id="frontWord"></div>
+            <div class="face-tag" id="frontTag"></div>
+            <div class="face-hint">tap to flip</div>
+          </div>
+          <div class="flip-face flip-back">
+            <div class="face-lang">English</div>
+            <div class="face-word" id="backWord"></div>
+            <div class="face-example" id="backExample"></div>
+          </div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="ctrl-btn" onclick="prevCard()">← Prev</button>
+        <button class="ctrl-btn" onclick="shuffleDeck()">⇄ Shuffle</button>
+        <button class="ctrl-btn" onclick="nextCard()">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD VIEW -->
+  <div id="view-add" style="display:none">
+    <div class="add-view">
+      <div class="section-title">Add a word from class</div>
+      <label class="field-label">Italian word or phrase</label>
+      <input class="field-input" id="newIt" placeholder="e.g. fare una passeggiata" />
+      <label class="field-label">English meaning</label>
+      <input class="field-input" id="newEn" placeholder="e.g. to go for a walk" />
+      <label class="field-label">Example sentence (optional)</label>
+      <input class="field-input" id="newEx" placeholder="e.g. Vado a fare una passeggiata." />
+      <label class="field-label">Category (optional)</label>
+      <input class="field-input" id="newTag" placeholder="e.g. leisure" value="my words" />
+      <button class="add-btn" onclick="addCard()">Add card</button>
+
+      <hr class="divider">
+      <div class="section-title">Bulk import</div>
+      <div class="import-hint">One word per line: <em>italiano, english</em></div>
+      <textarea class="field-textarea" id="bulkText" rows="5" placeholder="alzarsi, to get up&#10;fare la doccia, to take a shower&#10;andare al lavoro, to go to work"></textarea>
+      <button class="add-btn" style="background:#534AB7" onclick="bulkImport()">Import list</button>
+    </div>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div id="view-list" style="display:none">
+    <div class="list-view" id="listContainer"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DEFAULT_CARDS = [
+  { it: "svolgere le faccende", en: "to do the chores", tag: "housework", ex: "Ogni sabato svolgo le faccende domestiche." },
+  { it: "il pendolare", en: "commuter", tag: "work", ex: "Sono un pendolare: viaggio ogni giorno." },
+  { it: "la routine quotidiana", en: "daily routine", tag: "daily life", ex: "La mia routine inizia alle sette." },
+  { it: "fare la spesa", en: "to do the grocery shopping", tag: "errands", ex: "Faccio la spesa al mercato il giovedì." },
+  { it: "il bilancio familiare", en: "household budget", tag: "finance", ex: "Dobbiamo rispettare il bilancio familiare." },
+  { it: "prendere un appuntamento", en: "to make an appointment", tag: "admin", ex: "Ho preso un appuntamento dal medico." },
+  { it: "il tragitto", en: "commute / journey", tag: "transport", ex: "Il mio tragitto dura quaranta minuti." },
+  { it: "sbrigare le commissioni", en: "to run errands", tag: "errands", ex: "Ho sbrigato le commissioni in centro." },
+  { it: "la gestione del tempo", en: "time management", tag: "productivity", ex: "La gestione del tempo è fondamentale." },
+  { it: "concedersi una pausa", en: "to allow oneself a break", tag: "wellbeing", ex: "Di tanto in tanto mi concedo una pausa." },
+  { it: "l'affitto", en: "rent", tag: "housing", ex: "L'affitto sale ogni anno." },
+  { it: "trascorrere del tempo", en: "to spend time", tag: "leisure", ex: "Trascorro del tempo con la famiglia la sera." },
+  { it: "mantenersi in forma", en: "to keep fit", tag: "health", ex: "Vado in palestra per mantenermi in forma." },
+  { it: "la vita frenetica", en: "hectic lifestyle", tag: "daily life", ex: "La vita frenetica mi stanca moltissimo." },
+  { it: "riorganizzare", en: "to reorganise / declutter", tag: "housework", ex: "Ho riorganizzato l'armadio nel weekend." },
+  { it: "pianificare la settimana", en: "to plan the week", tag: "productivity", ex: "La domenica pianifico la settimana." },
+  { it: "staccare la spina", en: "to switch off / unplug", tag: "wellbeing", ex: "Nel weekend cerco di staccare la spina." },
+  { it: "il rapporto con i vicini", en: "relationship with neighbours", tag: "community", ex: "Ho un ottimo rapporto con i vicini." },
+  { it: "smaltire il bucato", en: "to get through the laundry", tag: "housework", ex: "Devo ancora smaltire il bucato." },
+  { it: "il tragitto casa-lavoro", en: "home-to-work commute", tag: "work", ex: "Il tragitto casa-lavoro mi prende un'ora." }
+];
+
+const TAG_COLORS = {
+  housework:"#1D9E75", work:"#185FA5", "daily life":"#7F77DD", errands:"#BA7517",
+  finance:"#639922", admin:"#888780", transport:"#378ADD", productivity:"#D85A30",
+  wellbeing:"#D4537E", housing:"#5F5E5A", leisure:"#0F6E56", health:"#3B6D11",
+  community:"#993C1D", "my words":"#534AB7"
+};
+
+function tagColor(t) { return TAG_COLORS[t] || "#7F77DD"; }
+
+// Load from localStorage or use defaults
+let cards = [];
+try {
+  const saved = localStorage.getItem("it_fc_cards");
+  cards = saved ? JSON.parse(saved) : DEFAULT_CARDS.map((c,i) => ({...c, id: i+1}));
+} catch(e) { cards = DEFAULT_CARDS.map((c,i) => ({...c, id: i+1})); }
+
+let idx = 0;
+let isFlipped = false;
+let currentView = "study";
+
+function save() {
+  try { localStorage.setItem("it_fc_cards", JSON.stringify(cards)); } catch(e) {}
+}
+
+function render() {
+  if (!cards.length) return;
+  const c = cards[idx];
+  document.getElementById("frontWord").textContent = c.it;
+  const tag = document.getElementById("frontTag");
+  tag.textContent = c.tag || "";
+  tag.style.background = tagColor(c.tag) + "22";
+  tag.style.color = tagColor(c.tag);
+  document.getElementById("backWord").textContent = c.en;
+  document.getElementById("backExample").textContent = c.ex ? `"${c.ex}"` : "";
+  const pct = Math.round(((idx + 1) / cards.length) * 100);
+  document.getElementById("cardCounter").textContent = `${idx + 1} / ${cards.length}`;
+  document.getElementById("cardPct").textContent = `${pct}%`;
+  document.getElementById("progressFill").style.width = pct + "%";
+  document.getElementById("badgeCount").textContent = cards.length + " card" + (cards.length !== 1 ? "s" : "");
+  document.getElementById("flipInner").classList.remove("flipped");
+  isFlipped = false;
+}
+
+function flipCard() {
+  isFlipped = !isFlipped;
+  document.getElementById("flipInner").classList.toggle("flipped", isFlipped);
+}
+
+function nextCard() { idx = (idx + 1) % cards.length; render(); }
+function prevCard() { idx = (idx - 1 + cards.length) % cards.length; render(); }
+
+function shuffleDeck() {
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  idx = 0; render(); showToast("Deck shuffled!");
+}
+
+function addCard() {
+  const it = document.getElementById("newIt").value.trim();
+  const en = document.getElementById("newEn").value.trim();
+  const ex = document.getElementById("newEx").value.trim();
+  const tag = document.getElementById("newTag").value.trim() || "my words";
+  if (!it || !en) { showToast("Please enter Italian and English"); return; }
+  const nc = { id: Date.now(), it, en, ex, tag };
+  cards.push(nc);
+  save();
+  document.getElementById("newIt").value = "";
+  document.getElementById("newEn").value = "";
+  document.getElementById("newEx").value = "";
+  document.getElementById("newTag").value = "my words";
+  idx = cards.length - 1;
+  render();
+  showToast("Card added ✓");
+  switchView("study");
+}
+
+function bulkImport() {
+  const raw = document.getElementById("bulkText").value.trim();
+  if (!raw) return;
+  let added = 0;
+  raw.split("\n").forEach(line => {
+    const parts = line.split(",");
+    if (parts.length >= 2) {
+      const it = parts[0].trim(), en = parts.slice(1).join(",").trim();
+      if (it && en) { cards.push({ id: Date.now() + added, it, en, ex: "", tag: "my words" }); added++; }
+    }
+  });
+  if (added) {
+    save();
+    document.getElementById("bulkText").value = "";
+    idx = cards.length - 1;
+    render();
+    showToast(`${added} card${added !== 1 ? "s" : ""} imported ✓`);
+    switchView("study");
+  } else {
+    showToast("No valid lines found");
+  }
+}
+
+function deleteCard(id) {
+  cards = cards.filter(c => c.id !== id);
+  if (idx >= cards.length) idx = Math.max(0, cards.length - 1);
+  save();
+  render();
+  renderList();
+  showToast("Card removed");
+}
+
+function renderList() {
+  const el = document.getElementById("listContainer");
+  if (!cards.length) { el.innerHTML = '<div class="empty">No cards yet. Add some!</div>'; return; }
+  el.innerHTML = cards.map((c, i) => `
+    <div class="list-item ${i === idx ? "current" : ""}" onclick="jumpTo(${i})">
+      <div style="flex:1; min-width:0">
+        <div class="list-it">${c.it}</div>
+        <div class="list-en">${c.en}</div>
+      </div>
+      <span class="list-tag" style="background:${tagColor(c.tag)}22;color:${tagColor(c.tag)}">${c.tag}</span>
+      <button class="del-btn" onclick="event.stopPropagation();deleteCard(${c.id})">×</button>
+    </div>
+  `).join("");
+}
+
+function jumpTo(i) { idx = i; render(); switchView("study"); }
+
+function switchView(v) {
+  currentView = v;
+  ["study","add","list"].forEach(name => {
+    document.getElementById("view-" + name).style.display = name === v ? "block" : "none";
+    document.getElementById("tab-" + name).classList.toggle("active", name === v);
+  });
+  if (v === "list") renderList();
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+render();
+</script>
+</body>
+</html>
